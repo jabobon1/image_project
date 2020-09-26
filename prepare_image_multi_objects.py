@@ -4,11 +4,10 @@ import random
 import cv2
 import numpy as np
 import pandas as pd
-from PIL import Image, ImageOps, ImageDraw
-
-from image_project.make_noize import noise_both, background_random, rnd_color
-from image_project.write_img import add_arr
 import progressbar
+from PIL import Image
+
+from image_project.make_noize import noise_both, background_random
 
 
 def get_iou(val1, val2):
@@ -55,6 +54,28 @@ def random_pos(x_max, y_max, ready: list, step=28):
     else:
         return random_pos(x_max, y_max, ready, step)
 
+def add_arr(arr1, arr2, pos=None):
+    """
+    :param arr1: background image
+    :param arr2: second image for superposition
+    :param pos: y1, y2, x1, x2
+    :return: array, background with arr2 on it
+    """
+    if pos is None:
+        pos = 0, arr2.shape[0], 0, arr2.shape[1]
+    y1, y2, x1, x2 = pos
+    new_arr = arr1.copy()
+    frame = new_arr[y1:y2, x1:x2]
+    second = arr2.copy()
+
+    null_indecies = np.argwhere(frame == 0)
+    # if all pixels in frame are empty
+    if np.multiply(*frame.shape) == null_indecies.shape[0]:
+        frame[:] = second
+    else:
+        for idx in null_indecies:
+            frame[tuple(idx)] = second[tuple(idx)]
+    return new_arr
 
 def random_img_generate(images, idx, img_dir=None,
                         shapes=(200, 50, 28, 28),
