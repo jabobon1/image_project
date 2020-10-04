@@ -7,17 +7,17 @@ import pandas as pd
 import progressbar
 from PIL import Image
 
-from image_project.make_noize import noise_both, background_random
+from make_noize import noise_both, background_random
 
 
 def get_iou(val1, val2):
     x1, x2, y1, y2 = val1
     xi_1, xi_2, yi_1, yi_2 = val2
 
-    x_left = max(x1, xi_1)
-    y_top = max(y1, y1)
-    x_right = min(x2, xi_2)
-    y_bottom = min(y2, yi_2)
+    x_left = min(x1, xi_1)
+    y_top = min(y1, yi_1)
+    x_right = max(x2, xi_2)
+    y_bottom = max(y2, yi_2)
 
     if x_right < x_left or y_bottom < y_top:
         return 0.0
@@ -54,6 +54,7 @@ def random_pos(x_max, y_max, ready: list, step=28):
     else:
         return random_pos(x_max, y_max, ready, step)
 
+
 def add_arr(arr1, arr2, pos=None):
     """
     :param arr1: background image
@@ -77,6 +78,7 @@ def add_arr(arr1, arr2, pos=None):
             frame[tuple(idx)] = second[tuple(idx)]
     return new_arr
 
+
 def random_img_generate(images, idx, img_dir=None,
                         shapes=(200, 50, 28, 28),
                         ):
@@ -94,9 +96,12 @@ def random_img_generate(images, idx, img_dir=None,
 
     ind_sorted_x = np.argsort([x[2] for x in results])
 
-    file_name = '_'.join([f"{images[ind].split('_')[0]}" for ind in
-                          ind_sorted_x])
-    file_name = str(idx) + '_' + file_name
+    file_name = [str(idx)]
+    for ind in ind_sorted_x:
+        file_name.append(images[ind].split('.')[0].split('_')[-1])
+
+    file_name = '_'.join(file_name)
+
     df = pd.DataFrame([[y1, y2, x1, x2] for y1, y2, x1, x2 in np.array(
         results)[ind_sorted_x]],
                       columns=['y1', 'y2',
@@ -107,6 +112,12 @@ def random_img_generate(images, idx, img_dir=None,
     base = add_arr(base, bg_gray)
 
     return base, df, file_name
+
+
+def check_path(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
 
 
 def make_dataset(input_dir,
@@ -132,9 +143,9 @@ def make_dataset(input_dir,
         final = noise_both(final)
 
         cv2.imwrite(img=final,
-                    filename=os.path.join(res_path, file_name + '.png'))
+                    filename=os.path.join(check_path(res_path), file_name + '.png'))
 
-        csv.to_csv(os.path.join(res_path + '_annot', file_name + '.csv'),
+        csv.to_csv(os.path.join(check_path(res_path + '_annot'), file_name + '.csv'),
                    index=False)
 
         idx += 1
@@ -142,4 +153,4 @@ def make_dataset(input_dir,
 
 
 if __name__ == '__main__':
-    make_dataset('mnist_2', res_path='result')
+    make_dataset('emnist', res_path='result')
