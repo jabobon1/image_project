@@ -12,3 +12,4 @@ six~=1.15.0
 scikit-image~=0.17.2
 Keras~=2.4.3
 emnist
+progressbar2

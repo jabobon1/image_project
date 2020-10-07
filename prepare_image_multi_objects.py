@@ -1,6 +1,6 @@
 import os
 import random
-
+from multiprocessing import Pool, cpu_count
 import cv2
 import numpy as np
 import pandas as pd
@@ -8,27 +8,34 @@ import progressbar
 from PIL import Image
 
 from make_noize import noise_both, background_random
+from useful_functions import check_path
 
 
 def get_iou(val1, val2):
-    x1, x2, y1, y2 = val1
-    xi_1, xi_2, yi_1, yi_2 = val2
+    y1, y2, x1, x2 = val1
+    yi_1, yi_2, xi_1, xi_2 = val2
 
-    x_left = min(x1, xi_1)
-    y_top = min(y1, yi_1)
-    x_right = max(x2, xi_2)
-    y_bottom = max(y2, yi_2)
+    x_left = max(x1, xi_1)
+    y_top = max(y1, yi_1)
+    x_right = min(x2, xi_2)
+    y_bottom = min(y2, yi_2)
 
     if x_right < x_left or y_bottom < y_top:
         return 0.0
 
-    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+    # intersection_area = (x_right - x_left) * (y_bottom - y_top)
+    intersection_area = abs(x_right - x_left) * abs(y_bottom - y_top)
 
-    bb1_area = (x2 - x1) * (y2 - y1)
-    bb2_area = (xi_2 - xi_1) * (yi_2 - yi_1)
-
-    iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
-
+    bb1_area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    bb2_area = (xi_2 - xi_1 + 1) * (yi_2 - yi_1 + 1)
+    try:
+        iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    except ZeroDivisionError:
+        print('zerro')
+        print(f'intersection_area:{intersection_area}, bb1_area:{bb1_area}, bb2_area:{bb2_area} ')
+        print(x1, x2, y1, y2)
+        print(xi_1, xi_2, yi_1, yi_2)
+        raise ZeroDivisionError
     return iou
 
 
@@ -45,11 +52,13 @@ def random_pos(x_max, y_max, ready: list, step=28):
     x = random.randint(0, x_m)
     y = random.randint(0, y_m)
     if ready:
-        new = [(x1, x2, y1, y2) for y1, y2, x1, x2 in ready]
-        iou = max([get_iou((x, x + step, y, y + step), posis) for posis in new])
+        new = [(y1, y2, x1, x2) for y1, y2, x1, x2 in ready]
+        iou = [get_iou((y, y + step, x, x + step), posis) for posis in new]
+        iou = max(iou)
+
     else:
         iou = 0
-    if iou < 0.3:
+    if iou < 0.2 and all(abs((x + step) - i[2]) > 8 or abs(x - i[3]) > 8 for i in ready):
         return y, y + step, x, x + step
     else:
         return random_pos(x_max, y_max, ready, step)
@@ -114,17 +123,13 @@ def random_img_generate(images, idx, img_dir=None,
     return base, df, file_name
 
 
-def check_path(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
 
 
-def make_dataset(input_dir,
+
+def make_dataset(files, input_dir='emnist',
                  res_path='result'):
     idx = 0
-    files = os.listdir(input_dir)
-    random.shuffle(files)
+    # files = os.listdir(input_dir)
     max_value = len(files)
     bar = progressbar.ProgressBar(max_value=max_value)
     bar.start()
@@ -153,4 +158,17 @@ def make_dataset(input_dir,
 
 
 if __name__ == '__main__':
-    make_dataset('emnist', res_path='result')
+    files = os.listdir('emnist')
+    random.shuffle(files)
+
+    args = [[] for _ in range(cpu_count())]
+
+    while files:
+        for i in range(cpu_count()):
+            try:
+                args[i].append(files.pop())
+            except IndexError:
+                pass
+    with Pool(cpu_count()) as p:
+        p.map(make_dataset, args)
+    p.close()
