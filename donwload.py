@@ -44,7 +44,7 @@ def captcha_generator(file_names: list, prefix: str, directory: str):
 
 
 if __name__ == '__main__':
-    save_path = 'result2'
+    save_path = 'result3'
     check_path(save_path)
 
     cpu = cpu_count()
