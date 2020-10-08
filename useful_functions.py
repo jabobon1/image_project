@@ -51,6 +51,8 @@ def plot_history(data):
     plt.plot(data.history['val_digit3_loss'], label='val_digit3_loss')
     plt.plot(data.history['val_digit4_loss'], label='val_digit4_loss')
     plt.plot(data.history['val_loss'], label='val_loss')
+    plt.xlabel('epochs')
+    plt.ylabel('loss')
     plt.legend()
     plt.savefig(f'metrics/loss_{datetime.now()}.png')
 
@@ -68,6 +70,8 @@ def plot_history(data):
     plt.plot(data.history['val_digit4_accuracy'], label='val_digit4_accuracy')
     plt.plot(data.history['val_digit5_accuracy'], label='val_digit5_accuracy')
     plt.legend()
+    plt.xlabel('epochs')
+    plt.ylabel('accuracy')
     plt.savefig(f'metrics/accuracy_{datetime.now()}.png')
     plt.show()
 
