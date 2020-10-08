@@ -12,7 +12,7 @@ from useful_functions import check_path
 
 LETTERS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-fonts = ['font/' + i for i in os.listdir('font')]
+fonts = ['fonts/' + i for i in os.listdir('fonts')]
 
 
 def download_mnist_dataset():

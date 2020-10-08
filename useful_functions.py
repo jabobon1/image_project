@@ -28,11 +28,14 @@ def plot_result(lim, x_data, y_pred, y_true):
         img = (x_data[:lim][i - 1] * 255).astype(np.uint8)
         fig.add_subplot(rows, columns, i).set_title('pred:' + res_p[i - 1] + '\ntrue:' + true_p[i - 1])
         plt.imshow(img)
-    plt.savefig(f'result_{datetime.now().time()}.png')
+
+    check_path('metrics')
+    plt.savefig(f'metrics/result_{datetime.now().time()}.png')
     plt.show()
 
 
 def plot_history(data):
+    check_path('metrics')
     # plot some data
     plt.figure()
     plt.plot(data.history['loss'], label='loss')
@@ -48,7 +51,7 @@ def plot_history(data):
     plt.plot(data.history['val_digit4_loss'], label='val_digit4_loss')
     plt.plot(data.history['val_loss'], label='val_loss')
     plt.legend()
-    plt.savefig(f'loss_{datetime.now().time()}.png')
+    plt.savefig(f'metrics/loss_{datetime.now().time()}.png')
 
     # accuracies
     plt.figure()
@@ -63,7 +66,7 @@ def plot_history(data):
     plt.plot(data.history['val_digit3_accuracy'], label='val_digit3_accuracy')
     plt.plot(data.history['val_digit4_accuracy'], label='val_digit4_accuracy')
     plt.plot(data.history['val_digit5_accuracy'], label='val_digit5_accuracy')
-    plt.savefig(f'accuracy_{datetime.now().time()}.png')
+    plt.savefig(f'metrics/accuracy_{datetime.now().time()}.png')
 
     plt.legend()
     plt.show()
@@ -76,22 +79,37 @@ def one_hot(y_vals, base_len=len(LETTERS)):
     return res
 
 
-def create_train_test(dir, maximum=-1, batch_size=1, train_p=0.75, img_shape=(50, 200, 3)):
+def makesymlink(files, new_dir):
+    os.makedirs(new_dir)
+    new_files = []
+    for file in files:
+        new_path = os.path.join(new_dir, file.split('/')[1])
+        os.symlink(os.path.abspath(file), os.path.abspath(new_path))
+        new_files.append(new_path)
+    return new_files
+
+
+def create_train_test(directory, maximum=-1, batch_size=1, train_p=0.75, img_shape=(50, 200, 3)):
     """Split dataset on train/test and return generators for each"""
-    files = os.listdir(dir)[:maximum] if maximum else os.listdir(dir)
-    shuffle(files)
 
-    t_start = int(len(files) * train_p)
-    train_files = files[:t_start]
-    test_files = files[t_start:]
+    if not os.path.exists('train/') and not os.path.exists('test/'):
+        files = os.listdir(directory)[:maximum] if maximum else os.listdir(directory)
+        shuffle(files)
+        t_start = int(len(files) * train_p)
 
-    def gen_function(files):
+        train_files = makesymlink([os.path.join(directory, fn) for fn in files[:t_start]], 'train')
+        test_files = makesymlink([os.path.join(directory, fn) for fn in files[t_start:]], 'test')
+    else:
+        train_files = os.listdir('train')[:maximum] if maximum else os.listdir('train')
+        test_files = os.listdir('test')[:int(maximum * (1 - train_p))] if maximum else os.listdir('test')
+
+    def gen_function(file_links, directory):
         while True:
             batch_x = np.zeros((batch_size, *img_shape))
             batch_y = np.zeros((5, batch_size, len(LETTERS)))
             cnt = 0
-            for file_name in files:
-                img = cv2.imread(os.path.join(dir, file_name), 1)
+            for file_name in file_links:
+                img = cv2.imread(os.path.join(directory, file_name), 1)
 
                 y = one_hot(file_name.split('.')[0].split('_')[1:])
 
@@ -104,4 +122,4 @@ def create_train_test(dir, maximum=-1, batch_size=1, train_p=0.75, img_shape=(50
                     yield batch_x.copy(), list(batch_y)
                     cnt = 0
 
-    return gen_function(train_files), gen_function(test_files)
+    return gen_function(train_files, 'train'), gen_function(test_files, 'test')
