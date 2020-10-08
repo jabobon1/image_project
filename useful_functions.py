@@ -14,7 +14,7 @@ def check_path(path):
     return path
 
 
-def plot_result(lim, x_data, y_pred, y_true):
+def plot_result(lim, x_data, y_pred, y_true, save=False):
     res_p = [''.join([LETTERS[i.argmax()] for i in y_pred[::, x]]) for x in range(lim)]
     true_p = [''.join([LETTERS[i.argmax()] for i in y_true[::, x]]) for x in range(lim)]
 
@@ -30,7 +30,8 @@ def plot_result(lim, x_data, y_pred, y_true):
         plt.imshow(img)
 
     check_path('metrics')
-    plt.savefig(f'metrics/result_{datetime.now().time()}.png')
+    if save:
+        plt.savefig(f'metrics/result_{datetime.now().time()}.png')
     plt.show()
 
 
@@ -51,7 +52,7 @@ def plot_history(data):
     plt.plot(data.history['val_digit4_loss'], label='val_digit4_loss')
     plt.plot(data.history['val_loss'], label='val_loss')
     plt.legend()
-    plt.savefig(f'metrics/loss_{datetime.now().time()}.png')
+    plt.savefig(f'metrics/loss_{datetime.now()}.png')
 
     # accuracies
     plt.figure()
@@ -66,9 +67,8 @@ def plot_history(data):
     plt.plot(data.history['val_digit3_accuracy'], label='val_digit3_accuracy')
     plt.plot(data.history['val_digit4_accuracy'], label='val_digit4_accuracy')
     plt.plot(data.history['val_digit5_accuracy'], label='val_digit5_accuracy')
-    plt.savefig(f'metrics/accuracy_{datetime.now().time()}.png')
-
     plt.legend()
+    plt.savefig(f'metrics/accuracy_{datetime.now()}.png')
     plt.show()
 
 

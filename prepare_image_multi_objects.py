@@ -7,7 +7,7 @@ import pandas as pd
 import progressbar
 from PIL import Image
 
-from make_noize import noise_both, background_random
+from make_noise import noise_both, background_random
 from useful_functions import check_path
 
 
@@ -123,13 +123,9 @@ def random_img_generate(images, idx, img_dir=None,
     return base, df, file_name
 
 
-
-
-
 def make_dataset(files, input_dir='emnist',
                  res_path='result'):
     idx = 0
-    # files = os.listdir(input_dir)
     max_value = len(files)
     bar = progressbar.ProgressBar(max_value=max_value)
     bar.start()

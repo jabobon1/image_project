@@ -1,33 +1,14 @@
 import os
 import random
+import progressbar
 from multiprocessing import Pool, cpu_count
 
-import cv2
-import progressbar
 from captcha.image import ImageCaptcha
-from emnist import extract_training_samples
-from emnist import list_datasets
-
 from useful_functions import check_path
 
 LETTERS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 fonts = ['fonts/' + i for i in os.listdir('fonts')]
-
-
-def download_mnist_dataset():
-    print(list_datasets())
-    images, labels = extract_training_samples('byclass')
-
-    check_path('emnist')
-
-    bar = progressbar.ProgressBar(max_value=len(images))
-    bar.start()
-    cnt = 0
-    for image, label in zip(images, labels):
-        cv2.imwrite(f'emnist/idx_{cnt}_label_{label}.png', image)
-        cnt += 1
-        bar.update(cnt)
 
 
 def captcha_generator(file_names: list, prefix: str, directory: str):
@@ -44,13 +25,13 @@ def captcha_generator(file_names: list, prefix: str, directory: str):
 
 
 if __name__ == '__main__':
-    save_path = 'result3'
-    check_path(save_path)
+    # directory to save captcha
+    save_path = check_path('result3')
 
     cpu = cpu_count()
 
     file_names = [[] for _ in range(cpu)]
-
+    # number of images to generate
     it = 50000
     for i in range(it):
         file_names[i % cpu].append([random.randint(0, len(LETTERS) - 1) for _ in range(5)])

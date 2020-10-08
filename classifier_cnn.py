@@ -101,4 +101,4 @@ if __name__ == '__main__':
     x_eval = eval[0]
     y_true = np.array(eval[1])
 
-    demo(model, x_eval, y_true)
+    demo(model, x_eval, y_true, save=True)
