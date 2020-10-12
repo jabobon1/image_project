@@ -28,3 +28,7 @@ Loss throw 80 epochs, bath size: 300, optimizer: adam, loss function - categoric
 | 3rd Dense| 0.75 |  0.73 | 0.739 | 0.904 | 0.907 | 0.905 |
 | 4th Dense| 0.847 | 0.833 | 0.839 | 0.965 | 0.965 | 0.965 |
 | 5th Dense| 0.935 | 0.919 | 0.926 | 0.980 | 0.979 | 0.979 |
+
+Results on test data:
+
+![Loss throw 80 epochs](examples/last.png)
